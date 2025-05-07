@@ -1,0 +1,8 @@
+_BASE_: "COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"
+MODEL:
+  ROI_HEADS:
+    NUM_CLASSES: 2
+  WEIGHTS: "model_training5.pth"
+DATASETS:
+  TEST: ("my5_test",)
+  TRAIN: ("my5_train",)
