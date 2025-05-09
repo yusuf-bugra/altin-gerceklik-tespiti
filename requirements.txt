@@ -2,3 +2,4 @@ flask
 torch
 opencv-python
 detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu118/torch2.1/index.html
+gdown
