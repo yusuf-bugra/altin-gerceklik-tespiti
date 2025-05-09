@@ -6,8 +6,15 @@ from detectron2.utils.visualizer import Visualizer
 from detectron2.data import MetadataCatalog
 import cv2
 import os
+import gdown
 
 app = Flask(__name__)
+
+model_path = "model/model_training5.pth"
+
+if not os.path.exists(model_path):
+    os.makedirs("model", exist_ok=True)
+    gdown.download("https://drive.google.com/uc?id=1beF5ywhTyYtLyc_aL5Hfs0dUFQZc2H1Y", model_path, quiet=False)
 
 cfg = get_cfg()
 cfg.merge_from_file("detectron2_config.yaml")
