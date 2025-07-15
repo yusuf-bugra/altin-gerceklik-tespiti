@@ -1,54 +1,59 @@
-from flask import Flask, render_template, request
-import torch
-from detectron2.engine import DefaultPredictor
-from detectron2.config import get_cfg
-from detectron2.utils.visualizer import Visualizer
-from detectron2.data import MetadataCatalog
-import cv2
 import os
+os.environ["GDOWN_CACHE_DIR"] = "/tmp/gdown"  # MUTLAKA EN ÜSTE
+
+from flask import Flask, request, render_template
 import gdown
+import cv2
+import torch
+from detectron2.config import get_cfg
+from detectron2.engine import DefaultPredictor
+from detectron2.data import MetadataCatalog
+from detectron2.utils.visualizer import Visualizer
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-model_path = "model/model_training5.pth"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_URL = "https://drive.google.com/uc?id=1beF5ywhTyYtLyc_aL5Hfs0dUFQZc2H1Y"
+MODEL_PATH = os.path.join(BASE_DIR, "model", "model_training5.pth")
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+CONFIG_PATH = "detectron2_config.yaml"
 
-if not os.path.exists(model_path):
-    os.makedirs("model", exist_ok=True)
-    gdown.download("https://drive.google.com/uc?id=1beF5ywhTyYtLyc_aL5Hfs0dUFQZc2H1Y", model_path, quiet=False)
+os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+if not os.path.exists(MODEL_PATH):
+    os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
+    gdown.download(MODEL_URL, MODEL_PATH, quiet=False, use_cookies=False)
 
 cfg = get_cfg()
-cfg.merge_from_file("detectron2_config.yaml")
+cfg.merge_from_file(CONFIG_PATH)
+cfg.MODEL.WEIGHTS = MODEL_PATH
 cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.6
-cfg.MODEL.WEIGHTS = "model_training5.pth"
-cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2
+cfg.MODEL.DEVICE = "cpu"
 predictor = DefaultPredictor(cfg)
-MetadataCatalog.get("my5_test").set(thing_classes=["fake", "real"])
+MetadataCatalog.get("my_dataset").thing_classes = ["fake_gold", "real_gold"]
 
 @app.route("/", methods=["GET", "POST"])
-def home():
+def index():
     result = None
+    confidence = None
     if request.method == "POST":
-        file = request.files["file"]
-        file_path = os.path.join("static", "upload.jpg")
-        file.save(file_path)
+        f = request.files["file"]
+        filename = secure_filename(f.filename)
+        filepath = os.path.join("uploads", filename)
+        os.makedirs("uploads", exist_ok=True)
+        f.save(filepath)
 
-        im = cv2.imread(file_path)
+        im = cv2.imread(filepath)
         outputs = predictor(im)
-        instances = outputs["instances"]
-        scores = instances.scores.tolist()
-        classes = instances.pred_classes.tolist()
-
-        if scores:
-            en_yuksek = max(zip(scores, classes), key=lambda x: x[0])
-            result = {
-                "sonuc": "Gerçek Altın" if en_yuksek[1] == 1 else "Sahte Altın",
-                "guven": f"{en_yuksek[0]*100:.2f}%"
-            }
-        else:
-            result = {"sonuc": "Hiçbir şey tespit edilemedi", "guven": "0%"}
-
-    return render_template("index.html", result=result)
+        pred_class = outputs["instances"].pred_classes[0].item()
+        
+        scores = outputs["instances"].scores
+        confidence = scores[0].item() * 100
+        
+        result = "Gerçek Altın" if pred_class == 1 else "Sahte Altın"
+    return render_template("index.html", result=result, confidence=confidence)
 
 if __name__ == "__main__":
-    app.run(debug=True)
-# Trigger deploy on Render
+    app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 7860)))

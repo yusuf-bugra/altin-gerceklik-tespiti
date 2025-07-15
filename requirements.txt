@@ -1,5 +1,9 @@
-flask
 torch
+torchvision
+torchaudio
 opencv-python
-detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu118/torch2.1/index.html
+flask
 gdown
+git+https://github.com/facebookresearch/fvcore.git
+git+https://github.com/facebookresearch/detectron2.git
+

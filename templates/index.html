@@ -1,18 +1,103 @@
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Altın Gerçeklik Tespiti</title>
+    <title>Altın Görseli Yükle</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f8f8f8;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #222;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        button {
+            background-color: #ffb300;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #ffa000;
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f1f8e9;
+            border-left: 5px solid #689f38;
+            border-radius: 6px;
+        }
+
+        .confidence {
+            margin-top: 10px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .fake {
+            background: #ffebee;
+            border-color: #c62828;
+        }
+
+        .real {
+            background: #e8f5e9;
+            border-color: #2e7d32;
+        }
+    </style>
 </head>
 <body>
-    <h1>Altın Gerçeklik Tespiti</h1>
-    <form action="/" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" required>
-        <button type="submit">Gönder</button>
-    </form>
-    {% if result %}
-        <h2>Sonuç: {{ result["sonuc"] }}</h2>
-        <h3>Güven: {{ result["guven"] }}</h3>
-    {% endif %}
+    <div class="container">
+        <h2>Altın Görseli Yükle</h2>
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" accept="image/*" required>
+            <button type="submit">Gönder</button>
+        </form>
+
+        {% if result %}
+        <div class="result {% if result == 'Gerçek Altın' %}real{% else %}fake{% endif %}">
+            <strong>Sonuç:</strong> {{ result }}
+            {% if confidence %}
+            <div class="confidence">Model Güveni: %{{ "%.2f"|format(confidence) }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
 </body>
 </html>
+
